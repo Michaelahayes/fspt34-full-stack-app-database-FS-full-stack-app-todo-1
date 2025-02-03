@@ -1,84 +1,11 @@
-// import { useEffect, useState } from "react";
-// import "./App.css";
-
-// export default function App() {
-//   let [input, setInput] = useState("");
-//   let [tasks, setTasks] = useState([]);
-
-//   useEffect(() => {
-//     fetch("/api/todos")
-//       .then(res => res.json())
-//       .then(json => {
-//         // upon success, update tasks
-//         console.log(json);
-//       })
-//       .catch(error => {
-//         // upon failure, show error message
-//       });
-//   }, []);
-
-//   const handleChange = event => {
-//     setInput(event.target.value);
-//   };
-
-//   const handleSubmit = event => {
-//     event.preventDefault();
-//   };
-
-//   const addTask = () => {
-//     fetch("/api/todos", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json"
-//       },
-//       body: JSON.stringify({ input: input })
-//     });
-//     // Continue fetch request here
-//   };
-
-//   const updateTask = id => {
-//     // update task from database
-//     // upon success, update tasks
-//     // upon failure, show error message
-//   };
-
-//   const deleteTask = id => {
-//     // delete task from database
-//     // upon success, update tasks
-//     // upon failure, show error message
-//   };
-
-//   return (
-//     <div>
-//       <h1>To Do List</h1>
-//       <form onSubmit={e => handleSubmit(e)}>
-//         <label>
-//           New Task:
-//           <input onChange={e => handleChange(e)} />
-//         </label>
-//         <button type="submit">Submit</button>
-//       </form>
-//     </div>
-//   );
-// }
-
 import { useEffect, useState } from "react";
 import "./App.css";
 
 export default function App() {
-  let [input, setInput] = useState("");
-  let [tasks, setTasks] = useState([]);
+  const [input, setInput] = useState("");
+  const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
-    /*  fetch("/api/todos")
-      .then(res => res.json())
-      .then(json => {
-        // upon success, update tasks
-        console.log(json);
-      })
-      .catch(error => {
-        // upon failure, show error message
-      }); */
     const getTodos = async () => {
       try {
         const response = await fetch("/api/todos");
@@ -98,29 +25,48 @@ export default function App() {
 
   const handleSubmit = event => {
     event.preventDefault();
+    addTask();
   };
 
-  const addTask = () => {
-    fetch("/api/todos", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ text: input })
-    });
-    // Continue fetch request here
+  const addTask = async () => {
+    try {
+      const response = await fetch("/api/todos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ text: input })
+      });
+      const data = await response.json();
+      setTasks(data);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const updateTask = id => {
-    // update task from database
-    // upon success, update tasks
-    // upon failure, show error message
+  const updateTask = async id => {
+    console.log("update task", id);
+    try {
+      const response = await fetch(`/api/todos/${id}`, {
+        method: "PUT"
+      });
+      const data = await response.json();
+      setTasks(data);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const deleteTask = id => {
-    // delete task from database
-    // upon success, update tasks
-    // upon failure, show error message
+  const deleteTask = async id => {
+    try {
+      const response = await fetch(`/api/todos/${id}`, {
+        method: "DELETE"
+      });
+      const data = await response.json();
+      setTasks(data);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -137,7 +83,13 @@ export default function App() {
         <ul>
           {tasks.map(task => (
             <div key={task.id}>
-              <li>{task.text}</li>
+              <li
+                className={task.complete && "completed"}
+                onClick={() => updateTask(task.id)}
+              >
+                {task.text}
+              </li>
+              <button onClick={() => deleteTask(task.id)}>Delete</button>
             </div>
           ))}
         </ul>
